@@ -1,0 +1,231 @@
+#!/usr/local/bin/python3.9
+
+import sys
+from pathlib import Path
+
+import mmap
+from datetime import datetime
+
+from tasklib import TaskWarrior
+import subprocess
+import marko
+from marko.ast_renderer import ASTRenderer
+
+if len(sys.argv) < 2 or len(sys.argv) > 3:
+  print("Usage: taskproject <projectname> [sections]")
+  sys.exit(1)
+
+tasksep = b'@@@'
+bullet = '-'
+
+project = sys.argv[1]
+completeproject = len(sys.argv) > 2
+
+filename = f'{Path.home()}/vimwiki/{project}.project.wiki'
+# TODO check if file exists, if not then query for alternative file or creation
+
+# TODO add info on whether the defaults should be applied to (a) all tasks or (b) only root tasks
+sections = [{'title': 'goals', 'filter': '-DELETED ( +goal or +idea )', 'defaults': '+goal'},
+            {'title': 'current', 'filter': 'status:pending ( +DUE or +OVERDUE or +ACTIVE or (+SCHEDULED (+READY or +BLOCKED)) or +weekly )', 'defaults': 'status:pending scheduled:now-1s'}, # -1s so it's immediately +READY
+            {'title': 'pending', 'filter': 'status:pending', 'defaults': 'status:pending wait:'},
+            {'title': 'filed', 'filter': 'status:waiting', 'defaults': 'wait:someday'},
+            {'title': 'scrapped', 'filter': 'status:deleted', 'defaults': 'status:deleted end:now'},
+            {'title': 'completed', 'filter': 'status:completed', 'defaults': 'status:completed end:now'}]
+
+
+if not completeproject:
+  # remove last 2
+  sections.pop()
+  sections.pop()
+
+tw = TaskWarrior('~/.task')
+
+def gettasks(section):
+  return { t['uuid']: t for t in tw.tasks.filter(f"({section['filter']})", project=project) }
+  # TODO need to implement sort myself?? 'start+,status,due+,scheduled+,wait+'
+  # https://docs.python.org/3/howto/sorting.html#key-functions
+  #sorted(tasks, key=lambda t: (1, 2, 3))
+  # reverse some keys but not others: https://stackoverflow.com/a/56842689
+
+statusticks = { 'waiting': 'W', 'pending': ' ', 'completed': 'X', 'deleted': 'D' } # plus '*' for active tasks
+tickdefaults = { 'D': 'status:deleted end:now', 'W': 'status:waiting wait:someday -next', ' ': 'status:pending -next', '+': 'status:pending +next', 's': 'status:pending scheduled:now', '*': 'status:pending start:now', '!': 'due:now', 'X': 'status:completed end:now'}
+
+def task_tick(task):
+  if task.active:
+    return '*'
+  elif task.pending:
+    if task['due'] and task['due'] < datetime.now(task['due'].tzinfo):
+      return '!'
+    elif task['scheduled']:
+      return 's'
+    elif 'next' in task['tags']:
+      return '+'
+  return statusticks[task['status']]
+
+# return a flat list of lines representing the task and any dependent tasks
+def task_md(task, candidates = None):
+  # TODO add some metadata if necessary -- like project if it is different from the parent?
+  # TODO add due date with due: and CONCEAL it?
+  st = f"{bullet} [{task_tick(task)}] {task['description']} #{task['uuid']}"#[0:8]
+  return [st] + ['    ' + dep_md for dep in task['depends'] if (candidates == None or dep in candidates) for dep_md in task_md(dep, candidates)]
+
+def tree_md(tasks):
+  roots = set(tasks) - {dep for task in tasks for dep in task['depends']}
+  return '\n'.join([ t_md for task in roots for t_md in task_md(task, tasks) ])
+
+alltasks = dict()
+
+# create file if it doesn't exist
+Path(filename).touch()
+# open wiki file and replace task list
+with open(filename, 'r+') as file:
+  try:
+    m = mmap.mmap(file.fileno(), 0);
+    index = m.find(tasksep)
+    if index < 0:
+      file.seek(0, 2)
+    else:
+      file.seek(index)
+
+  except ValueError:
+    # mmap failed to open (empty) file -- append template
+    file.write(f"""# {project}
+                                                                ({datetime.today().strftime('%Y-%m-%d')})
+## specific, identifiable, *verby* goal
+
+## visualisation of achieving the final goal state
+
+## *why* do I want to do this?
+
+# ACCOUNTABILITY
+
+accountability partner: 
+
+* [ ] high-level feedback at 30%
+* [ ] tactical/specific feedback at 90%
+
+""")
+  file.write(tasksep.decode('utf-8'))
+  for i, section in enumerate(sections):
+    file.write(f"\n\n## {section['title']}\n\n")
+    section['tasks'] = gettasks(section)
+    alltasks |= section['tasks']
+    if section['tasks']:
+      file.write(tree_md(section['tasks'].values()))
+      # TODO else write default structure? f"{bullet} "
+  file.truncate()
+
+# recursive extraction of tasks
+def wraptask(task):
+  description = task.children[0].children[0].children.removesuffix(" #" + (task.uuid or ""))
+  # task.children[0] is always a paragraph, if there is a sublist it's task.children[1]
+  return { 'task': task, 'description': description, 'deps': tasklisttree_tasks(task.children[1].children) if len(task.children) > 1 else [] }
+#    tasks[task.uuid]['deps'] = (t.uiid for t in ts)
+#      newtasks.append(task.children[0].children[0].children)
+
+def flatten_tasks(tasklist):
+  t = []
+  for i in tasklist:
+    t.append(i)
+    if i['deps']:
+      t.extend(flatten_tasks(i['deps']))
+  return t
+
+# returns a list of { 'task', 'description', 'deps' } dicts
+def tasklisttree_tasks(tasklist):
+  return [ wraptask(task) for task in tasklist ]
+
+def parse_tasklist(tasklist): # list of tasklist.TaskListItem
+  return flatten_tasks(tasklisttree_tasks(tasklist))
+
+try:
+  while True:
+    try:
+      subprocess.run([ 'vim', filename ]).check_returncode()
+      mk = marko.Markdown(renderer=ASTRenderer, extensions=['tasklist'])
+      txt = open(filename).read()
+      parts = [ pt.strip() for pt in txt.split(tasksep.decode('utf-8')) ]
+      doc = mk.parse(parts[1])
+
+      section = None
+      for el in doc.children:
+        # parse each section separately
+        if isinstance(el, marko.block.Heading):
+          section = next(s for s in sections if s['title'] == el.children[0].children)
+        elif isinstance(el, marko.block.List):
+          # get the parsed tree of tasks
+          parsedtasks = parse_tasklist(el.children)
+
+          mods = dict()
+          def queuemod(uuid, mod):
+            if uuid in mods:
+              mods[uuid].append(mod)
+            else:
+              mods[uuid] = [mod]
+
+          for t in parsedtasks:
+            if t['task'].uuid == None:
+              # 1. new tasks (with defaults -- use parent task (sub)project if available!) (what about scheduled: if it's within a sprint??)
+              # here we ignore the bullet in favour of the section
+              # FIXME if new tasks should have dependencies added on creation, need to add new tasks in reverse
+              ret = tw.execute_command([ "add", "project:" + project, t['description'] ] + section['defaults'].split() )
+              # TODO add config_override={'verbose': 'new-uuid'}
+              t['task'].uuid = ret[-1].rsplit(None, 1)[1][:-1]
+              print(f"Added new task {t['task'].uuid} ({section['defaults']})")
+            else:
+              # 2. if a task description (or bullet) has changed, needs its own unique task modify call anyway. do those first.
+              # check tick for change -- FIXME should also query newest task status from db before checking?
+              if t['task'].status != task_tick(alltasks[t['task'].uuid]):
+                # apply tick default value
+                queuemod(t['task'].uuid, tickdefaults[t['task'].status])
+
+              if t['description'] != alltasks[t['task'].uuid]['description']:
+                queuemod(t['task'].uuid, t['description'])
+
+          # 3. all tasks that are new in a section can have defaults applied in bulk
+          #   - ONLY if they don't already satisfy the new constraints, based on the individual application above)
+          section['tasks'] = gettasks(section)
+          movedtasks = [ t['task'].uuid for t in parsedtasks if not t['task'].uuid in section['tasks'].keys() ]
+          if movedtasks:
+            # prepend defaults if it's new to a section
+            print(f"Moving into {section['title']}: " + " ".join(movedtasks))
+            # this one is done in bulk here:
+            tw.execute_command([ " ".join(movedtasks), "modify" ] + section['defaults'].split())
+
+          # 4. if dependencies have changed, apply those in bulk
+          for t in parsedtasks:
+            try:
+              # get pre-update dependencies -- this is a LONG list
+              dbdeps = set([ dep['uuid'] for dep in alltasks[t['task'].uuid]['depends'] ])
+            except KeyError:
+              # new task
+              dbdeps = set()
+
+            # new depends:
+            parseddeps = set([ dep['task'].uuid for dep in t['deps'] ])
+            # (1) any deps of the parsed task which aren't in the db should be added
+            addeddeps = parseddeps - dbdeps
+            # (2) any deps which are not in the parsed task list anymore, but the tasks ARE in the same section should be REMOVED!
+            sectiontasks = set( section['tasks'].keys() )
+            missingdeps = dbdeps - parseddeps
+            removeddeps = missingdeps & sectiontasks
+
+            if addeddeps or removeddeps:
+              queuemod(t['task'].uuid, "depends:" + ",".join(addeddeps | {"-" + t for t in removeddeps}))
+
+          for uuid, modlist in mods.items():
+            print(uuid + " ".join(modlist))
+            tw.execute_command([ uuid, "modify" ] + modlist)
+
+          # 3 possibilities to update tasks:
+          # 1. update task attributes in tasklib (can't use 'now' etc): https://tasklib.readthedocs.io/en/latest/
+          # 2. batch re-import using `task import` -- check required attributes: https://taskwarrior.org/docs/design/task.html
+          # 3. invoke `task modify` for each (group of) tasks -- takes care of all attribute parsing and updating
+          # invoke task as implemented by taskwiki: https://github.com/tools-life/taskwiki/blob/c5d6f58ab9e3343377c91493efc2f8b2539ac6b4/taskwiki/main.py#L191-L195
+      break
+    except IndexError:
+      print("separator missing")
+      # separator missing?
+      continue
+except subprocess.CalledProcessError:
+  print("Aborted.")

@@ -1,0 +1,118 @@
+# [Created by task 2.5.3 3/14/2021 15:11:03]
+# Taskwarrior program configuration file.
+# For more documentation, see http://taskwarrior.org or try 'man task', 'man task-color',
+# 'man task-sync' or 'man taskrc'
+
+# Here is an example of entries that use the default, override and blank values
+#   variable=foo   -- By specifying a value, this overrides the default
+#   variable=      -- By specifying no value, this means no default
+#   #variable=foo  -- By commenting out the line, or deleting it, this uses the default
+
+# Use the command 'task show' to see all defaults and overrides
+
+# Files
+data.location=~/.task
+
+# Color theme (uncomment one to use)
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/light-16.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/light-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-16.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-red-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-green-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-blue-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-violets-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-yellow-green.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-gray-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/dark-gray-blue-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/solarized-dark-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/solarized-light-256.theme
+#include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/no-color.theme
+
+# for backwards compat
+uda.impact.type=string
+uda.workload.type=string
+uda.joy.type=string
+
+# goal scope
+uda.goal.label=Goal
+uda.goal.type=string
+uda.goal.values=year,quarter,month,
+color.uda.goal.year=bright red
+color.uda.goal.quarter=rgb520
+color.uda.goal.month=cyan
+
+# irrelevant ones
+urgency.age.coefficient=0
+urgency.project.coefficient=0
+urgency.tags.coefficient=0
+urgency.annotations.coefficient=0
+
+report.completed.sort=end-
+report.all.columns=status,uuid.short,start.active,entry.age,priority,project,tags,description,wait.remaining,scheduled,due.remaining,end.age,until.remaining
+report.all.labels=S,UUID,A,Age,P,Project,Tags,Description,Wait,Sch,Due,Done,Until
+
+report.next.description=Urgent (quadrant 1) + scheduled (quadrant 2) tasks
+report.next.filter=status:pending (+frog or +OVERDUE or +DUE or +weekly or (-idea -goal (+ACTIVE or +SCHEDULED )))
+report.next.sort=due+,scheduled+,urgency-,tags-
+report.next.columns=id,start.age,project,scheduled.relative,due.relative,description.count,urgency
+report.next.labels=ID,Active,Project,Sched,Due,Description,Urg
+
+report.project.description=ALL tasks related to a project, ordered by status
+report.project.sort=end-,project+/,status+/,start+,due+,tags-,urgency-
+report.project.columns=id,start.age,impact,workload,priority,joy,project,wait.relative,scheduled.relative,due,description,urgency,end
+report.project.labels=ID,Active,I,W,P,J,Project,Wait,Sched,Due,Description,Urg,Done
+
+report.pj.description=Project journal
+report.pj.filter=+project
+# 'scheduled' sorting in taskwarrior puts all non-scheduled before or after both future-and-past scheduled, so that's not good
+#report.project.sort=end-,status+/,start+,project+/,tags-,urgency-
+report.pj.sort=end-,status+/,start+,due+,scheduled-,tags-
+report.pj.columns=project,wait.relative,scheduled.relative,due,description,end
+report.pj.labels=Project,Wait,Sched,Due,Description,Done
+
+# TODO goals and ideas should be the same report (same order etc)
+report.longterm.description=Long-term planning and ideas
+report.longterm.sort=end-,goal,wait-,scheduled-,start,entry-
+report.longterm.columns=id,wait,scheduled,start.age,description,project,entry,end
+report.longterm.labels=ID,Wait,Sched,Since,Description,Project,Added,Completed
+report.longterm.dateformat=B Y
+# ideas = :longterm +idea -goal (ideas that i haven't committed to yet)
+# J = allideas = :longterm +idea
+# goals = :longterm +goal (can be an idea but not necessarily)
+
+report.ideas.description=All ideas
+report.ideas.filter=+idea
+report.ideas.sort=end-,status,entry-
+#report.ideas.sort=end-,goal,wait-,scheduled-,start,entry-
+report.ideas.columns=id,scheduled,start.age,description.count,project,entry,end
+report.ideas.labels=ID,Sched,Since,Description,Project,Added,Completed
+
+report.goals.description=Long term goals
+# filter by the goal tag, actually displayed is the goal uda!
+report.goals.filter=+goal
+report.goals.sort=status-,scheduled+,goal+
+report.goals.columns=id,goal,start,scheduled,due,description,project
+report.goals.labels=ID,Scope,Active since,Scheduled,Due,Description,Project
+report.goals.dateformat=B Y
+
+color.active=black on green
+# from least to most urgent
+color.due=black on yellow
+color.due.today=black on rgb520
+color.overdue=black on rgb500
+
+color.blocked=color8 on black
+color.blocking=bold red on black
+color.completed=green
+color.deleted=gray10
+color.scheduled=
+
+# show tasks due within X days (default 7)
+#due=8
+weekstart=monday
+bulk=8
+dateformat=d.m.
+#default.command=next
+#dateformat.report=Y-M-D H:N
+verbose=blank,header,footnote,label,new-uuid,affected,edit,special,project,sync,unwait,override,recur
