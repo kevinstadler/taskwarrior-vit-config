@@ -55,13 +55,13 @@ report.all.labels=S,UUID,A,Age,P,Project,Tags,Description,Wait,Sch,Due,Done,Unti
 report.next.description=Urgent (quadrant 1) + scheduled (quadrant 2) tasks
 report.next.filter=status:pending (+frog or +OVERDUE or +DUE or +weekly or (-idea -goal (+ACTIVE or +SCHEDULED )))
 report.next.sort=due+,scheduled+,urgency-,tags-
-report.next.columns=id,start.age,project,scheduled.relative,due.relative,description.count,urgency
+report.next.columns=id,start.age,project,scheduled.remaining,due.relative,description.count,urgency
 report.next.labels=ID,Active,Project,Sched,Due,Description,Urg
 
 report.project.description=ALL tasks related to a project, ordered by status
-report.project.sort=end-,project+/,status+/,start+,due+,tags-,urgency-
-report.project.columns=id,start.age,impact,workload,priority,joy,project,wait.relative,scheduled.relative,due,description,urgency,end
-report.project.labels=ID,Active,I,W,P,J,Project,Wait,Sched,Due,Description,Urg,Done
+report.project.sort=end-,goal,project+/,status+/,start+,due+,tags-,urgency-
+report.project.columns=id,goal,start.age,project,wait.relative,scheduled.relative,due,description,urgency,end
+report.project.labels=ID,Scope,Active,Project,Wait,Sched,Due,Description,Urg,Done
 
 report.pj.description=Project journal
 report.pj.filter=+project
@@ -98,9 +98,9 @@ report.goals.dateformat=B Y
 
 color.active=black on green
 # from least to most urgent
-color.due=black on yellow
-color.due.today=black on rgb520
-color.overdue=black on rgb500
+#color.due=black on yellow
+#color.due.today=black on rgb520
+#color.overdue=black on rgb500
 
 color.blocked=color8 on black
 color.blocking=bold red on black
