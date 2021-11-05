@@ -21,7 +21,7 @@ bullet = '-'
 project = sys.argv[1]
 completeproject = len(sys.argv) > 2
 
-filename = f'{Path.home()}/vimwiki/{project}.project.wiki'
+filename = f'{Path.home()}/.task/wiki/{project}.md'
 # TODO check if file exists, if not then query for alternative file or creation
 
 # TODO add info on whether the defaults should be applied to (a) all tasks or (b) only root tasks

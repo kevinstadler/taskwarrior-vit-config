@@ -1,8 +1,18 @@
+"set hlsearch
+set incsearch
+
+set tabstop=2
+set shiftwidth=2
+set autoindent
+set expandtab
+
 set number relativenumber
 set backspace=indent,eol,start
 set nocompatible
 filetype plugin on
-syntax on
+syntax enable
+" packadd! dracula
+" colorscheme dracula
 
 set foldlevel=99
 "set foldminlines=3
@@ -18,9 +28,9 @@ set foldlevel=99
 "call plug#end()
 
 let g:vimwiki_global_ext = 0
-let g:vimwiki_list = [{'path': '~/vimwiki/', 'syntax': 'markdown', 'ext': '.wiki'}]
+let g:vimwiki_list = [{'path': '~/.task/wiki/', 'syntax': 'markdown', 'ext': '.md'}]
 " https://mkaz.blog/working-with-vim/vimwiki/
-let g:vimwiki_listsyms = 'W +s*X' " waiting, pending, +next, scheduled, active, completed
+let g:vimwiki_listsyms = ' W+s*X' " waiting, pending, +next, scheduled, active, completed
 let g:vimwiki_listsym_rejected = 'D'
 let g:vimwiki_folding = 'expr:quick'
 "https://github.com/vimwiki/vimwiki/commit/2a31984369300120bf11e8dcc62e358ab268477f#diff-1ef903c6e8988556c346ab49420ddfb12545c6bb36e14264630578a946ab9256
@@ -29,8 +39,8 @@ let g:listsyms_propagate = 0
 "nmap q <leader>ww
 "nmap s <leader>t+
 
-autocmd VimEnter *.wiki silent! :source %.vim
-autocmd VimLeave *.wiki :mksession! %.vim
+autocmd VimEnter ~/.task/wiki/*.md silent! :source %.vim
+autocmd VimLeave ~/.task/wiki/*.md :mksession! %.vim
 " TODO make filetype specific: https://stackoverflow.com/questions/53538592/in-vimrc-apply-certain-highlighting-rules-only-for-certain-filetype
 " https://vi.stackexchange.com/a/10666
 autocmd FileType vimwiki nmap <buffer> <Space> :VimwikiToggleListItem<CR>
@@ -54,16 +64,20 @@ endfun
 
 function! OpenFoldOrIncreaseIndent()
   if synIDattr(synID(line("."), col("."), 1), "name") == 'VimwikiListTodo'
+    " increase list item level
     :normal gll
   else
+    " open fold
     :normal zo
   endif
 endfun
 
-function! CloseFoldOrDencreaseIndent()
+function! CloseFoldOrDecreaseIndent()
   if synIDattr(synID(line("."), col("."), 1), "name") == 'VimwikiListTodo'
+    " decrease list item level
     :normal glh
   else
+    " close fold
     :normal zc
   endif
 endfun
@@ -73,8 +87,10 @@ autocmd FileType vimwiki inoremap <buffer> <S-Up> <Esc>:call SkipUpOrIncrement()
 autocmd FileType vimwiki nmap <buffer> <S-Down> :call SkipDownOrDecrement()<CR>
 autocmd FileType vimwiki inoremap <buffer> <S-Down> <Esc>:call SkipDownOrDecrement()<CR>i
 " autocmd FileType vimwiki nmap <buffer> <S-n> :VimwikiNextTask<CR>
-autocmd FileType vimwiki nmap <buffer> <S-Right> :call OpenFoldOrIncreaseIndent()<CR>
-autocmd FileType vimwiki nmap <buffer> <S-Left> :call CloseFoldOrDencreaseIndent()<CR>
+autocmd FileType vimwiki nmap <buffer> >> :call OpenFoldOrIncreaseIndent()<CR>
+autocmd FileType vimwiki nmap <buffer> << :call CloseFoldOrDecreaseIndent()<CR>
+noremap > >>
+noremap < <<
 
 " add a conceal for UUIDs
 " https://alok.github.io/2018/05/09/more-about-vim-conceal/
