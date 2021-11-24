@@ -5,14 +5,22 @@ This repository is a `homes(h)ick` castle for taskwarrior/vit configuration file
 ## history
 
 * in spring 2021 I started using [taskwarrior](https://taskwarrior.org) with [vit](https://github.com/vit-project/vit) as an interactive frontend
+* while taskwarrior works great for managing individual tasks, I never found a good way to organise groups of tasks into projects, or keeping track of what projects I was currently working on (in Agile lingo: I couldn't find a good way to assign tasks to sprints, schedule and manage sprints etc.)
 * for managing hierarchies of dependent tasks (typical for project organisation) I tried out [taskwiki](https://github.com/tools-life/taskwiki), but I found it to be very slow and it [does not support batch updating of tasks](https://github.com/tools-life/taskwiki/issues/196#issuecomment-634789028)
-* in the end I implemented a [custom script for populating/parsing tasks](bin/taskproject) which I am calling from `vit`. it populates a vimwiki file with task lists which I can then edit interactively in `vipe`, on exit it parses changes and writes them into the taskwarrior database before returning to `vit`.
+* in the end I implemented a [custom script for populating/parsing tasks](bin/taskproject) which I call from `vit`. it populates a vimwiki file with task lists which I can then edit interactively in `vipe`, on exit it parses changes and writes them into the taskwarrior database before returning to `vit`.
 
 ## workflow
 
 My `vit`/`task` database doubles as [both parts of task and project management](https://medium.com/strong-opinions/daily-planning-the-bulletproof-system-54367a45b422): on one hand (more unusally) a *personal dashboard* for long-term tracking of ideas which turn into projects/goals and grow more and more specific tasks. This permanent storage archive ends up producing my actual *to do list*, which feeds into my paper-based daily bullet journalling which I use to organize my days.
 
-### idea / project / phase / task workflow
+### part 1: dashboard workflow
+#### goals
+
+* [X] specific, measureable long-term goals are tasks with a `+goal` tag. they should certainly have a `scheduled` (start) date, and optionally also a `due` date (if there is an actual deadline)
+* [X] the `:goals` report shows all current and future goals sorted by their `scheduled` dates
+* completed/deleted goals at the bottom
+
+#### idea / project workflow
 
 To understand the meaning of the taskwarrior tags (e.g. `+ACTIVE`), see [virtual tag logic](https://kevinstadler.github.io/notes/taskwarrior-virtual-tag-logic/).
 
@@ -31,11 +39,26 @@ In a previous paper-based project journal I kept track (and a check on the numbe
 * completed (`+COMPLETED`)
 * scrapped (`+DELETED`)
 
-### goals
+### part 2: project phase / task workflow
 
-* [X] specific, measureable long-term goals are tasks with a `+goal` tag. they should certainly have a `scheduled` (start) date, and optionally also a `due` date (if there is an actual deadline)
-* [X] the `:goals` report shows all current and future goals sorted by their `scheduled` dates
-* completed/deleted goals at the bottom
+within a project, tasks are organized in two ways:
+
+1. they are grouped into task dependency hierarchies (a big goal will have it's sub-goals or tasks as dependencies). neither taskwarrior nor vit have the ability to display dependency hierarchies, so while I might add individual tasks from within vit, the hierarchy visualisation and management are all done by [taskproject script](bin/taskproject).
+2. tasks go through a series of *states* that are meaningful within the project (but obviously also makes them show up in my `next` report todo list whenever it's appropriate
+  1. a pending task can be marked for inclusion in the next sprint by adding `+next`
+  2. when a sprint is started, all `+next` tasks of the project get `scheduled:now` and a `due:` date that needs be set from within vit *and that is propagated to all `+next` dependency tasks*
+
+within `taskproject`, the project task state can be distinguished in the following way:
+
+* goals (`+goal or +idea`) are the big (visualisable) outcomes that I am working towards
+* `[*]` current (`+DUE or +OVERDUE or +ACTIVE or (+SCHEDULED (+READY or +BLOCKED))`) are already ongoing or scheduled. when a project task is scheduled, it should also be given a due: date 
+* `[+]` queued (`+next` and `due:`) are tasks that are marked for a spring that hasn't started yet
+* `[ ]` pending are ALL `-WAITING` tasks (including all of the ones above)
+* `[W]` filed (`+WAITING`)
+
+#### distinguishing sprint-deadline tasks from "real" deadline tasks
+
+(TODO is this necessary? if I simply propagate due dates through the task dependency hierarchies, is the `+next` tag not enough?) many non-project-related tasks have a due date. in order to be able to quickly filter out these "real" deadline tasks from sprint-deadline tasks, sprint tasks get a scheduled: date at the time when their corresponding sprint is started
 
 ### workflow keybindings
 
@@ -56,5 +79,5 @@ general idea:
     * `'`: add a new child task (a task which is a dependency of the current task)
     * `P`: make task a `+project` and give it a project name
     * `I`: add an `+idea`
-    * `Shift+Down`: open `:project` report of the current task's project
+    * `Shift+Right`: open `:project` report of the current task's project
 

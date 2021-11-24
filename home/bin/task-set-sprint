@@ -1,0 +1,40 @@
+#!/usr/local/bin/python3.9
+
+import sys
+from pathlib import Path
+
+from datetime import datetime
+
+from tasklib import TaskWarrior
+import subprocess
+
+if len(sys.argv) < 2 or len(sys.argv) > 3:
+  print("Usage: task-set-sprint <uuid> [date]")
+  sys.exit(1)
+
+tw = TaskWarrior('~/.task')
+task = tw.tasks.get(uuid=sys.argv[1])
+
+date = sys.argv[3] if len(sys.argv) > 2 else None
+
+# if no date: apply parent's
+if not date:
+  def finddate(task):
+    if task['due']:
+      return task['due']
+    else:
+      # find parent's
+      return finddate(tw.tasks.filter("depends.contains:" + task['uuid'])[0])
+  # filtering by uuid is actually by string matching
+  date = finddate(task)
+
+# set date for task and all +next child tasks
+# recurse down
+def getqueueddeps(task):
+  return [ task ] + [ recdep for dep in task['depends'] for recdep in getqueueddeps(dep) if 'next' in recdep['tags'] ]
+
+targets = ",".join([t['uuid'] for t in getqueueddeps(task)])
+
+# apply due date
+tw.execute_command(['modify', targets, 'due:' + date.isoformat()])
+
