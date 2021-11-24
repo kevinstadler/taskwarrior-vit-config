@@ -53,6 +53,9 @@ tickdefaults = { 'D': 'status:deleted end:now', 'W': 'status:waiting wait:someda
 def task_tick(task):
   if task.active:
     return '*'
+  elif task.waiting:
+    # something broke with task 2.6.1 that taskdb doesn't have task['status'] as 'waiting' anymore, so add this one...
+    return 'W'
   elif task.pending:
     if task['due'] and task['due'] < datetime.now(task['due'].tzinfo):
       return '!'
@@ -83,6 +86,7 @@ with open(filename, 'r+') as file:
     m = mmap.mmap(file.fileno(), 0);
     index = m.find(tasksep)
     if index < 0:
+      # seek to end
       file.seek(0, 2)
     else:
       file.seek(index)
@@ -144,8 +148,8 @@ try:
       subprocess.run([ 'vim', filename ]).check_returncode()
       mk = marko.Markdown(renderer=ASTRenderer, extensions=['tasklist'])
       txt = open(filename).read()
-      parts = [ pt.strip() for pt in txt.split(tasksep.decode('utf-8')) ]
-      doc = mk.parse(parts[1])
+      parts = [ pt for pt in txt.split(tasksep.decode('utf-8')) ]
+      doc = mk.parse(parts[1].strip())
 
       section = None
       for el in doc.children:
@@ -222,6 +226,9 @@ try:
           # 2. batch re-import using `task import` -- check required attributes: https://taskwarrior.org/docs/design/task.html
           # 3. invoke `task modify` for each (group of) tasks -- takes care of all attribute parsing and updating
           # invoke task as implemented by taskwiki: https://github.com/tools-life/taskwiki/blob/c5d6f58ab9e3343377c91493efc2f8b2539ac6b4/taskwiki/main.py#L191-L195
+
+      # call truncate at the position of the separator/end of the intro text
+      subprocess.run([ 'truncate', '-s', str(len(parts[0].encode('utf-8'))), filename ]).check_returncode()
       break
     except IndexError:
       print("separator missing")
