@@ -14,6 +14,8 @@ if len(sys.argv) < 2 or len(sys.argv) > 3:
 
 tw = TaskWarrior('~/.task')
 task = tw.tasks.get(uuid=sys.argv[1])
+if not task:
+  raise ValueError
 
 date = sys.argv[3] if len(sys.argv) > 2 else None
 
@@ -26,15 +28,25 @@ if not date:
       # find parent's
       return finddate(tw.tasks.filter("depends.contains:" + task['uuid'])[0])
   # filtering by uuid is actually by string matching
-  date = finddate(task)
+  try:
+    date = finddate(task)
+  except IndexError:
+    while not date:
+      try:
+        date = datetime.strptime(input("Please give a due date for this sprint: "), "%Y-%m-%d").date()
+        # FIXME get proper date format out of that (timestamp?)
+      except ValueError:
+        next
 
 # set date for task and all +next child tasks
 # recurse down
 def getqueueddeps(task):
   return [ task ] + [ recdep for dep in task['depends'] for recdep in getqueueddeps(dep) if 'next' in recdep['tags'] ]
 
-targets = ",".join([t['uuid'] for t in getqueueddeps(task)])
+targets = getqueueddeps(task)
+print(f"Applying sprint deadline {date} to {len(targets)} tasks")
+print(targets)
 
 # apply due date
-tw.execute_command(['modify', targets, 'due:' + date.isoformat()])
+tw.execute_command([" ".join([t['uuid'] for t in targets]), 'modify', 'due:' + date.isoformat()])
 

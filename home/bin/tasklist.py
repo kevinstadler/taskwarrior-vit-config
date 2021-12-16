@@ -110,7 +110,7 @@ from marko import inline
 
 class InlineTodoItem(inline.InlineElement):
 #    pattern = r'\[\[ *(.+?) *| *(.+?) *\]\]'
-    pattern = r'\[[DW +S*X!]\][ \t\f] (.*) \#'
+    pattern = r'\[[DW +Ss*X!]\][ \t\f] (.*) \#'
     parse_children = False
 
     @classmethod

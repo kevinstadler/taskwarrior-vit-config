@@ -19,7 +19,7 @@ case "$DESCRIPTION" in
   *"journal"* | *"log "* | *"plan"*)
     TAG="logging/management/planning"
   ;;
-  *"look into"* | *"research"*)
+  *"look into "* | *"research"* | *"browse "*)
     TAG="research"
   ;;
   *"buy "* | *"order "*)
@@ -36,6 +36,8 @@ fi
 
 if [ -z "$PROJECT" ] || ! clockify-cli --allow-project-name in "$PROJECT" "$DESCRIPTION" --not-billable ${TAG[@]/#/}; then
   # TODO cut only last bit off the project name
-  echo "Adding without project"
-  clockify-cli in 605568e87c2e0f6e55cfe535 "$DESCRIPTION" --not-billable ${TAG[@]/#/}
+  echo "Adding without project ${TAG[@]/#/}"
+  if ! clockify-cli in 605568e87c2e0f6e55cfe535 "$DESCRIPTION" --not-billable ${TAG[@]/#/}; then
+    clockify-cli in 605568e87c2e0f6e55cfe535 "$DESCRIPTION" --not-billable
+  fi
 fi
