@@ -12,6 +12,7 @@
 
 # Files
 data.location=~/.task
+include ~/.task/sync.rc
 
 # Color theme (uncomment one to use)
 #include /usr/local/Cellar/task/2.5.3/share/doc/task/rc/light-16.theme
@@ -37,34 +38,45 @@ uda.joy.type=string
 # goal scope
 uda.goal.label=Goal
 uda.goal.type=string
-uda.goal.values=year,quarter,month,
 color.uda.goal.year=bright red
 color.uda.goal.quarter=rgb520
 color.uda.goal.month=cyan
 
+# urgency
+#urgency.user.tag.OVERDUE.coefficient=20
+#urgency.user.tag.DUETODAY.coefficient=10
+urgency.user.tag.next.coefficient=1
+urgency.due.coefficient=100
+urgency.active.coefficient=10
+#urgency.scheduled.coefficient=-50
+urgency.waiting.coefficient=-50
+
 # irrelevant ones
+urgency.blocking.coefficient=.1
+urgency.blocked.coefficient=-.1
 urgency.age.coefficient=0
 urgency.project.coefficient=0
 urgency.tags.coefficient=0
 urgency.annotations.coefficient=0
 
 report.completed.sort=end-
-report.all.columns=status,uuid.short,start.active,entry.age,priority,project,tags,description,wait.remaining,scheduled,due.remaining,end.age,until.remaining
-report.all.labels=S,UUID,A,Age,P,Project,Tags,Description,Wait,Sch,Due,Done,Until
+report.recurring.filter=end: (+PARENT or +CHILD)
+report.all.columns=status.short,uuid.short,start.active,entry.age,priority,project,tags,description,scheduled,due.remaining,end.age,until.remaining
+report.all.labels=S,UUID,A,Age,P,Project,Tags,Description,Sch,Due,Done,Until
 
 report.next.description=Urgent (quadrant 1) + scheduled (quadrant 2) tasks
-report.next.filter=status:pending (+frog or +OVERDUE or +DUE or +weekly or (-idea -goal (+ACTIVE or +SCHEDULED )))
-report.next.sort=due+,scheduled+,urgency-,tags-
-report.next.columns=id,start.age,project,scheduled.remaining,due.relative,description.count,urgency
-report.next.labels=ID,Active,Project,Sched,Due,Description,Urg
+report.next.filter=status:pending (+frog or +OVERDUE or +DUE or +weekly or (-BLOCKED (+ACTIVE or (+SCHEDULED +READY))))
+#report.next.sort=start+,due+,scheduled+,urgency-,tags-
+report.next.columns=id,start.age,depends.count,project,scheduled.relative,due.relative,description.count,urgency
+report.next.labels=ID,Active,Dep,Project,Sched,Due,Description,Urg
 
 report.project.description=ALL tasks related to a project, ordered by status
-report.project.sort=end-,goal,project+/,status+/,start+,due+,tags-,urgency-
-report.project.columns=id,goal,start.age,project,wait.relative,scheduled.relative,due,description,urgency,end
-report.project.labels=ID,Scope,Active,Project,Wait,Sched,Due,Description,Urg,Done
+report.project.sort=end-,goal,project+/,start+,due+,urgency-
+report.project.columns=status.short,id,goal,start.age,project,wait.relative,scheduled.relative,due,description,urgency,end
+report.project.labels=S,ID,Scope,Active,Project,Wait,Sched,Due,Description,Urg,Done
 
 report.pj.description=Project journal
-report.pj.filter=+project
+report.pj.filter=+project or (+idea +ACTIVE)
 # 'scheduled' sorting in taskwarrior puts all non-scheduled before or after both future-and-past scheduled, so that's not good
 #report.project.sort=end-,status+/,start+,project+/,tags-,urgency-
 report.pj.sort=end-,status+/,start+,due+,scheduled-,tags-
@@ -90,7 +102,7 @@ report.ideas.labels=ID,Sched,Since,Description,Project,Added,Completed
 
 report.goals.description=Long term goals
 # filter by the goal tag, actually displayed is the goal uda!
-report.goals.filter=+goal
+report.goals.filter=+goal OR goal.not:
 report.goals.sort=status-,scheduled+,goal+
 report.goals.columns=id,goal,start,scheduled,due,description,project
 report.goals.labels=ID,Scope,Active since,Scheduled,Due,Description,Project
@@ -98,15 +110,16 @@ report.goals.dateformat=B Y
 
 color.active=black on green
 # from least to most urgent
-#color.due=black on yellow
-#color.due.today=black on rgb520
-#color.overdue=black on rgb500
+color.due=yellow
+color.due.today=black on rgb530
+color.overdue=black on rgb510
 
-color.blocked=color8 on black
+# color.blocked=color15 on black
 color.blocking=bold red on black
 color.completed=green
 color.deleted=gray10
-color.scheduled=
+#color.scheduled=
+rule.precedence.color=deleted,completed,active,keyword.,tag.,project.,overdue,due.today,scheduled,due,blocked,blocking,recurring,tagged,uda.
 
 # show tasks due within X days (default 7)
 #due=8

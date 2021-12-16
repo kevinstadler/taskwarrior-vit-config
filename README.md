@@ -60,6 +60,17 @@ within `taskproject`, the project task state can be distinguished in the followi
 
 (TODO is this necessary? if I simply propagate due dates through the task dependency hierarchies, is the `+next` tag not enough?) many non-project-related tasks have a due date. in order to be able to quickly filter out these "real" deadline tasks from sprint-deadline tasks, sprint tasks get a scheduled: date at the time when their corresponding sprint is started
 
+Modelling this hierarchy with urgency:
+
+* `+OVERDUE`, `+DUE` tasks (urgency 100)
+* `+ACTIVE` tasks (extra urgency...30?)
+* `+SCHEDULED` tasks (-50 to distinguish from 'real' deadlines
+* `+BLOCKING` tasks +10 because they are more important than loose tasks? (is this necessary?)
+* `+next` tasks (+10)
+* `+WAIING` tasks (-100ish?)
+
+In the `next` report, *hide* `+project` and `+BLOCKED` tasks
+
 ### workflow keybindings
 
 general idea:
