@@ -13,14 +13,9 @@ This repository is a `homes(h)ick` castle for taskwarrior/vit configuration file
 
 My `vit`/`task` database doubles as [both parts of task and project management](https://medium.com/strong-opinions/daily-planning-the-bulletproof-system-54367a45b422): on one hand (more unusally) a *personal dashboard* for long-term tracking of ideas which turn into projects/goals and grow more and more specific tasks. This permanent storage archive ends up producing my actual *to do list*, which feeds into my paper-based daily bullet journalling which I use to organize my days.
 
-### part 1: dashboard workflow
-#### goals
+In order of where tasks get added:
 
-* [X] specific, measureable long-term goals are tasks with a `+goal` tag. they should certainly have a `scheduled` (start) date, and optionally also a `due` date (if there is an actual deadline)
-* [X] the `:goals` report shows all current and future goals sorted by their `scheduled` dates
-* completed/deleted goals at the bottom
-
-#### idea / project workflow
+### dashboard #1: `:ideas`
 
 To understand the meaning of the taskwarrior tags (e.g. `+ACTIVE`), see [virtual tag logic](https://kevinstadler.github.io/notes/taskwarrior-virtual-tag-logic/).
 
@@ -31,15 +26,25 @@ To understand the meaning of the taskwarrior tags (e.g. `+ACTIVE`), see [virtual
   * [ ] ~~how will I add annotations to an idea to turn it into a concrete project/goal? -- look at onenote~~
   * [X] once I start working on an idea it will be tagged as `+project`, assigned a `project:` which all consequent goals/tasks will be grouped under as well, and (usually) made `+ACTIVE` by setting a `start:` date
 
+### dashboard #2: `:goals`
+
+* [X] specific, measureable long-term goals are tasks with a `+goal` tag. they should certainly have a `scheduled` (start) date, and optionally also a `due` date (if there is an actual deadline)
+* [X] the `:goals` report shows all current and future goals sorted by their `scheduled` dates
+* completed/deleted goals at the bottom
+
+### dashboard #3: project journal (`:pj`)
+
 In a previous paper-based project journal I kept track (and a check on the number) of currently active projects by grouping them in different stages. The different stages (and their corresponding taskwarrior states) are:
 
-* ongoing (`+ACTIVE`)
-* blocked (`+blocked`)
-* filed (`+WAITING`)
-* completed (`+COMPLETED`)
-* scrapped (`+DELETED`)
+* `jj` ongoing (`+ACTIVE`)
+* `jb` blocked (`+blocked`)
+* `jf` filed (`+WAITING`)
+* `jd` completed (`+COMPLETED`)
+* `jD` scrapped (`+DELETED`)
 
-### part 2: project phase / task workflow
+Other shortcuts: `ja` for showing ongoing+blocked `+projects`, `jA` for *all* `+projects`
+
+### `:project` dashboard: phase / task management
 
 within a project, tasks are organized in two ways:
 
@@ -51,14 +56,12 @@ within a project, tasks are organized in two ways:
 within `taskproject`, the project task state can be distinguished in the following way:
 
 * goals (`+goal or +idea`) are the big (visualisable) outcomes that I am working towards
-* `[*]` current (`+DUE or +OVERDUE or +ACTIVE or (+SCHEDULED (+READY or +BLOCKED))`) are already ongoing or scheduled. when a project task is scheduled, it should also be given a due: date 
-* `[+]` queued (`+next` and `due:`) are tasks that are marked for a spring that hasn't started yet
+* `[*]` current (`+DUE or +OVERDUE or +ACTIVE or +SCHEDULED`) are already ongoing or part of the current sprint (sprint tasks are both scheduled and given a due: date, see below)
+* `[+]` queued (`+next`) are tasks that are marked for the next upcoming sprint
 * `[ ]` pending are ALL `-WAITING` tasks (including all of the ones above)
 * `[W]` filed (`+WAITING`)
 
-#### distinguishing sprint-deadline tasks from "real" deadline tasks
-
-(TODO is this necessary? if I simply propagate due dates through the task dependency hierarchies, is the `+next` tag not enough?) many non-project-related tasks have a due date. in order to be able to quickly filter out these "real" deadline tasks from sprint-deadline tasks, sprint tasks get a scheduled: date at the time when their corresponding sprint is started
+### day-to-day work: `:next`
 
 Modelling this hierarchy with urgency:
 
@@ -71,6 +74,10 @@ Modelling this hierarchy with urgency:
 
 In the `next` report, *hide* `+project` and `+BLOCKED` tasks
 
+#### distinguishing sprint-deadline tasks from "real" deadline tasks
+
+many non-project-related tasks have a due date, one that is arguably more "real" than the self-defined deadlines of my own sprints. in order to be able to quickly filter out these "real" deadline tasks from sprint-deadline tasks, sprint tasks get a `scheduled:` date at the time when their corresponding sprint is started.
+
 ### workflow keybindings
 
 general idea:
@@ -79,8 +86,8 @@ general idea:
   1. navigating to reports
     * `q`: `:next` (return to home page)
     * `i`: `:ideas` list
-    * `j`: `:pj` project journal
-    * `k`: `:goals` list
+    * `jj`: `:pj` project journal
+    * `kk`: `:goals` list
     * `p`: `:project` project task list (prompts project name)
   2. basic (non-context dependent) operations
     * defaults such as `a`, `m`

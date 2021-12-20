@@ -26,7 +26,7 @@ filename = f'{Path.home()}/.task/wiki/{project}.md'
 
 # TODO add info on whether the defaults should be applied to (a) all tasks or (b) only root tasks
 sections = [{'title': 'goals', 'filter': '-DELETED ( +goal or +idea )', 'defaults': '+goal'},
-            {'title': 'current', 'filter': 'status:pending ( +DUE or +OVERDUE or +ACTIVE or (+SCHEDULED (+READY or +BLOCKED)) or +weekly )', 'defaults': 'status:pending scheduled:now-1s'}, # -1s so it's immediately +READY
+            {'title': 'current', 'filter': 'status:pending ( +DUE or +OVERDUE or +ACTIVE or +next or +frog or +weekly )', 'defaults': 'status:pending'}, # TODO call task-set-sprint on any moved in here
             {'title': 'pending', 'filter': 'status:pending', 'defaults': 'status:pending wait:'},
             {'title': 'filed', 'filter': 'status:waiting', 'defaults': 'wait:someday'},
             {'title': 'scrapped', 'filter': 'status:deleted', 'defaults': 'status:deleted end:now'},
