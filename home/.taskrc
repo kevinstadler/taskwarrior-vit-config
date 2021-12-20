@@ -45,15 +45,15 @@ color.uda.goal.month=cyan
 # urgency
 #urgency.user.tag.OVERDUE.coefficient=20
 #urgency.user.tag.DUETODAY.coefficient=10
-urgency.user.tag.next.coefficient=1
 urgency.due.coefficient=100
 urgency.active.coefficient=10
-#urgency.scheduled.coefficient=-50
+urgency.scheduled.coefficient=2
+urgency.user.tag.next.coefficient=1
+urgency.blocking.coefficient=.1
+urgency.blocked.coefficient=-.1
 urgency.waiting.coefficient=-50
 
 # irrelevant ones
-urgency.blocking.coefficient=.1
-urgency.blocked.coefficient=-.1
 urgency.age.coefficient=0
 urgency.project.coefficient=0
 urgency.tags.coefficient=0
@@ -67,59 +67,51 @@ report.all.labels=S,UUID,A,Age,P,Project,Tags,Description,Sch,Due,Done,Until
 report.next.description=Urgent (quadrant 1) + scheduled (quadrant 2) tasks
 report.next.filter=status:pending (+frog or +OVERDUE or +DUE or +weekly or (-BLOCKED (+ACTIVE or (+SCHEDULED +READY))))
 #report.next.sort=start+,due+,scheduled+,urgency-,tags-
-report.next.columns=id,start.age,depends.count,project,scheduled.relative,due.relative,description.count,urgency
-report.next.labels=ID,Active,Dep,Project,Sched,Due,Description,Urg
+report.next.columns=start.age,scheduled.relative,due.relative,description,depends.count,project,urgency
+report.next.labels=Active,Sched,Due,Description,Dep,Project,Urg
 
 report.project.description=ALL tasks related to a project, ordered by status
 report.project.sort=end-,goal,project+/,start+,due+,urgency-
-report.project.columns=status.short,id,goal,start.age,project,wait.relative,scheduled.relative,due,description,urgency,end
-report.project.labels=S,ID,Scope,Active,Project,Wait,Sched,Due,Description,Urg,Done
+report.project.columns=status.short,goal,start.age,project,scheduled.relative,due,description,urgency,end
+report.project.labels=S,Scope,Active,Project,Sched,Due,Description,Urg,Done
 
 report.pj.description=Project journal
-report.pj.filter=+project or (+idea +ACTIVE)
+report.pj.filter=+project
 # 'scheduled' sorting in taskwarrior puts all non-scheduled before or after both future-and-past scheduled, so that's not good
-#report.project.sort=end-,status+/,start+,project+/,tags-,urgency-
-report.pj.sort=end-,status+/,start+,due+,scheduled-,tags-
-report.pj.columns=project,wait.relative,scheduled.relative,due,description,end
-report.pj.labels=Project,Wait,Sched,Due,Description,Done
-
-# TODO goals and ideas should be the same report (same order etc)
-report.longterm.description=Long-term planning and ideas
-report.longterm.sort=end-,goal,wait-,scheduled-,start,entry-
-report.longterm.columns=id,wait,scheduled,start.age,description,project,entry,end
-report.longterm.labels=ID,Wait,Sched,Since,Description,Project,Added,Completed
-report.longterm.dateformat=B Y
-# ideas = :longterm +idea -goal (ideas that i haven't committed to yet)
-# J = allideas = :longterm +idea
-# goals = :longterm +goal (can be an idea but not necessarily)
+report.pj.sort=end-,status+/,due+,start+,scheduled-
+report.pj.columns=project,depends.count,scheduled.relative,due,description,end,urgency,tags.indicator
+report.pj.labels=Project,Dep,Sched,Due,Description,Done,Urgency,T
 
 report.ideas.description=All ideas
 report.ideas.filter=+idea
-report.ideas.sort=end-,status,entry-
-#report.ideas.sort=end-,goal,wait-,scheduled-,start,entry-
-report.ideas.columns=id,scheduled,start.age,description.count,project,entry,end
-report.ideas.labels=ID,Sched,Since,Description,Project,Added,Completed
+report.ideas.sort=entry-
+report.ideas.columns=entry,start.age,end,description.truncated,project
+report.ideas.labels=Date,Since,Completed,Description,Project
 
 report.goals.description=Long term goals
 # filter by the goal tag, actually displayed is the goal uda!
-report.goals.filter=+goal OR goal.not:
-report.goals.sort=status-,scheduled+,goal+
-report.goals.columns=id,goal,start,scheduled,due,description,project
-report.goals.labels=ID,Scope,Active since,Scheduled,Due,Description,Project
+report.goals.filter=+goal or goal.not:
+report.goals.sort=end-,due+
+report.goals.columns=goal,due,description,end
+report.goals.labels=Scope,Due,Description,End
 report.goals.dateformat=B Y
 
-color.active=black on green
+color.active=green
+#black on green
 # from least to most urgent
 color.due=yellow
 color.due.today=black on rgb530
 color.overdue=black on rgb510
 
 # color.blocked=color15 on black
+color.alternate=
 color.blocking=bold red on black
-color.completed=green
+color.completed=rgb020
 color.deleted=gray10
 #color.scheduled=
-rule.precedence.color=deleted,completed,active,keyword.,tag.,project.,overdue,due.today,scheduled,due,blocked,blocking,recurring,tagged,uda.
+color.tag.blocked=black on red
+rule.color.merge=no
+rule.precedence.color=deleted,completed,tag.,active,keyword.,overdue,due.today,scheduled,due,blocked,blocking,recurring,tagged,uda.
 
 # show tasks due within X days (default 7)
 #due=8
