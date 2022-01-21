@@ -34,11 +34,13 @@ To understand the meaning of the taskwarrior tags (e.g. `+ACTIVE`), see [virtual
 
 ### dashboard #3: project journal (`:pj`)
 
-In a previous paper-based project journal I kept track (and a check on the number) of currently active projects by grouping them in different stages. The different stages (and their corresponding taskwarrior states) are:
+Projects are the sets/sprints of tasks required to work towards one or more related goals. In a previous paper-based project journal I kept track (and a check on the number) of currently active projects by grouping them in different stages or states. The project journal is different from the big picture goal report by telling me which goals or projects I realistically have time to and should be working on at the moment.
 
-* `jj` ongoing (`+ACTIVE`)
-* `jb` blocked (`+blocked`)
-* `jf` filed (`+WAITING`)
+The question of which tasks should correspond to a project journal page/entry is a tricky one. I've settled to show all tasks that either have the `+project` tag (not so convenient as multiple tags hide the vit marker for goals, ideas etc), or ones which have their `ps` (project status) uda set to one of the three possible values: `active`, `blocked`, and `filed`. The different stages (and their corresponding taskwarrior states) are:
+
+* `jj` ongoing (`ps:active`)
+* `jb` blocked (`ps:blocked`)
+* `jf` filed (`ps:filed`)
 * `jd` completed (`+COMPLETED`)
 * `jD` scrapped (`+DELETED`)
 

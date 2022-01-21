@@ -26,7 +26,7 @@ filename = f'{Path.home()}/.task/wiki/{project}.md'
 
 # TODO add info on whether the defaults should be applied to (a) all tasks or (b) only root tasks
 sections = [{'title': 'goals', 'filter': '-DELETED ( +goal or +idea )', 'defaults': '+goal'},
-            {'title': 'current', 'filter': 'status:pending ( +DUE or +OVERDUE or +ACTIVE or +next or +frog or +weekly )', 'defaults': 'status:pending'}, # TODO call task-set-sprint on any moved in here
+            {'title': 'current', 'filter': 'status:pending ( +goal or ( +SCHEDULED +READY ) or +DUE or +OVERDUE or +ACTIVE or +next or +frog or +weekly )', 'defaults': 'status:pending'}, # TODO call task-set-sprint on any moved in here
             {'title': 'pending', 'filter': 'status:pending', 'defaults': 'status:pending wait:'},
             {'title': 'filed', 'filter': 'status:waiting', 'defaults': 'wait:someday'},
             {'title': 'scrapped', 'filter': 'status:deleted', 'defaults': 'status:deleted end:now'},
@@ -70,7 +70,7 @@ def task_md(task, candidates = None):
   # TODO add some metadata if necessary -- like project if it is different from the parent?
   # TODO add due date with due: and CONCEAL it?
   st = f"{bullet} [{task_tick(task)}] {task['description']} #{task['uuid']}"#[0:8]
-  return [st] + ['    ' + dep_md for dep in task['depends'] if (candidates == None or dep in candidates) for dep_md in task_md(dep, candidates)]
+  return [st] + ['  ' + dep_md for dep in task['depends'] if (candidates == None or dep in candidates) for dep_md in task_md(dep, candidates)]
 
 def tree_md(tasks):
   roots = set(tasks) - {dep for task in tasks for dep in task['depends']}
@@ -172,6 +172,7 @@ try:
               # 1. new tasks (with defaults -- use parent task (sub)project if available!) (what about scheduled: if it's within a sprint??)
               # here we ignore the bullet in favour of the section
               # FIXME if new tasks should have dependencies added on creation, need to add new tasks in reverse
+              # FIXME if the bullet/tickmark is NOT default (empty " "), apply that ticks defaults on top of the section defaults
               ret = tw.execute_command([ "add", "project:" + project, t['description'] ] + section['defaults'].split() )
               # TODO add config_override={'verbose': 'new-uuid'}
               t['task'].uuid = ret[-1].rsplit(None, 1)[1][:-1]
