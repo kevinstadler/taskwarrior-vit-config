@@ -75,8 +75,18 @@ autocmd VimEnter <silent> ~/.task/wiki/*.md :source %.vim " or BufReadPost?
 autocmd BufWrite ~/.task/wiki/*.md :mksession! %.vim " or BufLeave,BufWinLeave?
 " autocmd VimLeave ~/.task/wiki/*.md :mksession! %.vim
 
+let mapleader=";"
+map - <leader>
+set showcmd " show incomplete leader commands
 "nmap q <leader>ww
 "nmap s <leader>t+
+" execute on \\
+nnoremap <leader><leader> :!"%:p"<Enter>
+nnoremap <leader>q :q<Enter>
+nnoremap <leader>w :w<Enter>
+nnoremap <leader>ww :w<Enter>
+nnoremap <leader>wq :wq<Enter>
+
 
 " TODO make filetype specific: https://stackoverflow.com/questions/53538592/in-vimrc-apply-certain-highlighting-rules-only-for-certain-filetype
 " https://vi.stackexchange.com/a/10666
